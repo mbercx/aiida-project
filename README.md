@@ -36,7 +36,12 @@ or simply open a new terminal.
 ```
 
 This will also add the `cda` function to your shell startup file, so you can easily switch projects.
-Note that you'll have to source your e.g. `.zshrc` file for this function to be accessible!
+In order to activate tab-completion, you'll have to run
+
+    aiida-project --install-completion
+
+> [!NOTE]
+> You will have to and restart the terminal after running either of these commands, or source the shell config file.
 
 ### `create`
 
