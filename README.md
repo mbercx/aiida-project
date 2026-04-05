@@ -30,7 +30,7 @@ aiida-project init
 
 Info: For the changes to take effect, run the following command:
 
-    source /Users/mbercx/.zshrc
+    source ~/.aiida_project/init.zsh
 
 or simply open a new terminal.
 ```

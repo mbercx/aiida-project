@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
 from importlib import resources
 from pathlib import Path
@@ -9,11 +10,22 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, field_validator
 
+BLOCK_START = "# >>> aiida-project >>>"
+BLOCK_END = "# <<< aiida-project <<<"
+
 
 class ShellType(str, Enum):
     bash = "bash"
     zsh = "zsh"
     fish = "fish"
+
+    @property
+    def rc_file(self) -> Path | None:
+        """Absolute path to the shell's rc file, or None if not applicable."""
+        return {
+            ShellType.bash: Path.home() / ".bashrc",
+            ShellType.zsh: Path.home() / ".zshrc",
+        }.get(self)
 
 
 class Shell(BaseModel):
@@ -31,6 +43,31 @@ class Shell(BaseModel):
     def resolve_config_file(cls, value: Path) -> Path:
         """Resolve the shell configuration file."""
         return Path.home() / value
+
+    def write_config(self, env_file_path: str | Path) -> bool:
+        """Write init lines to the dedicated config file.
+
+        Returns True if this is a re-init (file already existed).
+        """
+        is_reinit = self.config_file.exists()
+        self.config_file.parent.mkdir(parents=True, exist_ok=True)
+
+        self.config_file.write_text(self.init_lines.format(env_file_path=env_file_path))
+        return is_reinit
+
+    def ensure_source_line(self, rc_file: Path) -> None:
+        """Add source line block to rc_file if not already present."""
+        rc_file.touch(exist_ok=True)
+
+        if BLOCK_START not in rc_file.read_text():
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with rc_file.open("a") as handle:
+                handle.write(
+                    f"\n{BLOCK_START}\n"
+                    f"# Configured on {timestamp}\n"
+                    f"source {self.config_file}\n"
+                    f"{BLOCK_END}\n"
+                )
 
 
 def load_shell(shell_str: str) -> Shell:
