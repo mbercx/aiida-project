@@ -61,6 +61,8 @@ You can then activate the project using the `cda` command described above:
 cda firstproject
 ```
 
+The `cda` command supports tab-completion and lists the available projects.
+
 Next to activating the Python virtual environment, this will also change the directory to the one for the project.
 `aiida-project` automatically sets up a directory structure, which we intend to be made configurable globally:
 
