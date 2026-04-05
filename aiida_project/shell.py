@@ -37,6 +37,8 @@ class Shell(BaseModel):
     """AiiDA-specific lines to add to the environment's activate script."""
     deactivate: str
     """AiiDA-specific lines to add to the environment's deactivate script."""
+    version: int
+    """Shell config version from shell_fields.yaml."""
 
     @field_validator("config_file")
     @classmethod
@@ -52,7 +54,9 @@ class Shell(BaseModel):
         is_reinit = self.config_file.exists()
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
 
-        self.config_file.write_text(self.init_lines.format(env_file_path=env_file_path))
+        self.config_file.write_text(
+            f"# version: {self.version}\n" + self.init_lines.format(env_file_path=env_file_path)
+        )
         return is_reinit
 
     def ensure_source_line(self, rc_file: Path) -> None:
@@ -69,11 +73,26 @@ class Shell(BaseModel):
                     f"{BLOCK_END}\n"
                 )
 
+    def _installed_version(self) -> int:
+        """Read the version from the installed config file."""
+        first_line = self.config_file.read_text().split("\n")[0]
+        try:
+            return int(first_line.removeprefix("# version: "))
+        except ValueError:
+            return 0
+
+    @property
+    def is_outdated(self) -> bool:
+        """Whether the installed shell config is older than the current version."""
+        if not self.config_file.exists():
+            return False
+        return self._installed_version() < self.version
+
 
 def load_shell(shell_str: str) -> Shell:
-    """Load the project class corresponding the engine type."""
+    """Load the shell configuration for the given shell type."""
     from . import data
 
     with (resources.files(data) / "shell_fields.yaml").open("r") as handle:
         specs = yaml.safe_load(handle)
-    return Shell(**specs[shell_str])
+    return Shell(version=specs["version"], **specs[shell_str])

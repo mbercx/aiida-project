@@ -20,11 +20,26 @@ _NOT_INITIALISED_MSG = (
 
 
 @app.callback()
-def callback() -> None:
+def callback(ctx: typer.Context) -> None:
     """
     AiiDA project manager: Isolated Python environments tailored to AiiDA
     with separated project directories, configs, and AiiDA profiles.
     """
+    if ctx.invoked_subcommand == "init":
+        return
+
+    from ..config import ProjectConfig
+
+    config = ProjectConfig()
+    if not config.is_initialised():
+        return
+
+    shell = load_shell(config.aiida_project_shell)
+    if shell.is_outdated:
+        print(
+            "⚠️  [bold yellow]Warning:[/] Shell configuration is outdated. "
+            "Run [bold]aiida-project init[/bold] to update."
+        )
 
 
 @app.command()

@@ -1,3 +1,4 @@
+version: 1
 bash:
   config_file: .aiida_project/init.bash
   init_lines: &bash_init_lines |
