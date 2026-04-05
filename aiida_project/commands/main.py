@@ -13,6 +13,11 @@ from ..shell import ShellType, load_shell
 
 app = typer.Typer(pretty_exceptions_show_locals=False)
 
+_NOT_INITIALISED_MSG = (
+    "[bold red]Error:[/bold red] The AiiDA project config has not been initialised.\n"
+    "[bold blue]Info:[/bold blue] Please run `aiida-project init` to get started."
+)
+
 
 @app.callback()
 def callback() -> None:
@@ -96,7 +101,8 @@ def create(  # noqa: PLR0915
     from ..project import ProjectDict
 
     config = ProjectConfig()
-    if config.is_not_initialised():
+    if not config.is_initialised():
+        print(_NOT_INITIALISED_MSG)
         sys.exit(os.EX_CONFIG)
 
     # Guard against user putting an empty string (allowed by typer!)
@@ -187,7 +193,8 @@ def destroy(
     from ..config import ProjectConfig
     from ..project import ProjectDict
 
-    if ProjectConfig().is_not_initialised():
+    if not ProjectConfig().is_initialised():
+        print(_NOT_INITIALISED_MSG)
         sys.exit(os.EX_CONFIG)
 
     project_dict = ProjectDict()
@@ -218,7 +225,7 @@ def list_projects() -> None:
     from ..config import ProjectConfig
     from ..project import ProjectDict
 
-    if ProjectConfig().is_not_initialised():
+    if not ProjectConfig().is_initialised():
         sys.exit(os.EX_CONFIG)
 
     projects = ProjectDict().projects
